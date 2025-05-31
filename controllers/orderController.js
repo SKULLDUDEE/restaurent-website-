@@ -138,11 +138,19 @@ const createOrder = async (req, res) => {
           const availableTable = await Table.findOne({
             status: "available",
             chairs: { $gte: numberOfGuestsForOrder },
+            number: { $ne: null } // Ensure we don't get tables with null numbers
           }).sort({ number: 1 });
 
           if (!availableTable) {
             return res.status(400).json({
               message: `No available tables for ${numberOfGuestsForOrder} guests`,
+            });
+          }
+
+          // Ensure table number is not null
+          if (availableTable.number === null) {
+            return res.status(500).json({
+              message: "Invalid table configuration. Please contact support.",
             });
           }
 

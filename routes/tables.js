@@ -30,6 +30,39 @@ router.post("/initialize", async (req, res) => {
   }
 });
 
+// Fix tables with null numbers
+router.post("/fix-tables", async (req, res) => {
+  try {
+    // Find tables with null numbers
+    const tablesWithNullNumbers = await Table.find({ number: null });
+    
+    if (tablesWithNullNumbers.length === 0) {
+      return res.status(200).json({ message: "No tables with null numbers found" });
+    }
+    
+    // Find the highest current table number
+    const lastTable = await Table.findOne().sort({ number: -1 });
+    let nextNumber = lastTable && lastTable.number ? lastTable.number + 1 : 1;
+    
+    // Fix tables with null numbers
+    for (const table of tablesWithNullNumbers) {
+      table.number = nextNumber++;
+      await table.save();
+    }
+    
+    res.status(200).json({ 
+      message: `Fixed ${tablesWithNullNumbers.length} tables with null numbers`,
+      fixedTables: tablesWithNullNumbers
+    });
+  } catch (error) {
+    console.error("Error fixing tables:", error);
+    res.status(500).json({ 
+      message: "Failed to fix tables with null numbers", 
+      error: error.message 
+    });
+  }
+});
+
 // Get all tables (with optional search/filter)
 router.get("/", async (req, res) => {
   try {
@@ -73,18 +106,26 @@ router.post("/", async (req, res) => {
 
     // Find the highest current table number and assign the next sequential number
     const lastTable = await Table.findOne().sort({ number: -1 });
-    const nextNumber = lastTable ? lastTable.number + 1 : 1;
+    const nextNumber = lastTable && lastTable.number ? lastTable.number + 1 : 1;
+
+    // Ensure number is not null
+    if (!nextNumber || isNaN(nextNumber)) {
+      return res.status(400).json({ 
+        error: "Invalid table number. Could not determine next table number." 
+      });
+    }
 
     const table = new Table({
       number: nextNumber,
       name: name || "Table", // Default name to "Table"
-      chairs,
+      chairs: chairs || 4, // Default to 4 chairs if not specified
       status: "available", // New tables are initially available
       occupiedChairs: 0, // Initialize occupied chairs to 0
     });
     await table.save();
     res.status(201).json(table);
   } catch (err) {
+    console.error("Error creating table:", err);
     res.status(400).json({ error: err.message });
   }
 });
