@@ -2,7 +2,7 @@ const Order = require("../models/Order");
 const Table = require("../models/Table");
 
 // Simple list of chefs (can be expanded later)
-const chefs = ["Chef Gordon", "Chef Julia", "Chef Jamie", "Chef Bobby"];
+const chefs = ["Chef RAJAT", "Chef RAJA", "Chef RAI", "Chef RAVI"];
 
 // Function to get a random chef
 const getRandomChef = () => {

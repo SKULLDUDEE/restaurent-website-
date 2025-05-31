@@ -6,21 +6,16 @@ const {
   updateOrderStatus,
   getCompletedOrders,
   getRevenueData
-} = require("../controllers/orderController"); // Path relative to server/routes
+} = require("../controllers/orderController"); 
 
-// GET /api/orders - Get all orders
 router.get("/", getOrders);
 
-// GET /api/orders/completed - Get completed orders
 router.get("/completed", getCompletedOrders);
 
-// GET /api/orders/revenue - Get revenue data
 router.get("/revenue", getRevenueData);
 
-// POST /api/orders - Create a new order
-router.post("/", createOrder); // Route is just '/' because it's mounted at /api/orders
+router.post("/", createOrder); 
 
-// PATCH /api/orders/:id - Update order status
 router.patch("/:id", updateOrderStatus);
 
 module.exports = router;
