@@ -105,8 +105,17 @@ router.post("/", async (req, res) => {
     const { name, chairs } = req.body;
 
     // Find the highest current table number and assign the next sequential number
-    const lastTable = await Table.findOne().sort({ number: -1 });
-    const nextNumber = lastTable && lastTable.number ? lastTable.number + 1 : 1;
+    // Check both number and tableNumber fields
+    const lastTableByNumber = await Table.findOne().sort({ number: -1 });
+    const lastTableByTableNumber = await Table.findOne().sort({ tableNumber: -1 });
+    
+    // Determine the highest number from both fields
+    const highestNumber = Math.max(
+      lastTableByNumber && lastTableByNumber.number ? lastTableByNumber.number : 0,
+      lastTableByTableNumber && lastTableByTableNumber.tableNumber ? lastTableByTableNumber.tableNumber : 0
+    );
+    
+    const nextNumber = highestNumber > 0 ? highestNumber + 1 : 1;
 
     // Ensure number is not null
     if (!nextNumber || isNaN(nextNumber)) {
@@ -115,13 +124,17 @@ router.post("/", async (req, res) => {
       });
     }
 
+    console.log(`Creating new table with number: ${nextNumber}`);
+
     const table = new Table({
       number: nextNumber,
+      tableNumber: nextNumber, // Set both fields to the same value
       name: name || "Table", // Default name to "Table"
       chairs: chairs || 4, // Default to 4 chairs if not specified
       status: "available", // New tables are initially available
       occupiedChairs: 0, // Initialize occupied chairs to 0
     });
+    
     await table.save();
     res.status(201).json(table);
   } catch (err) {
